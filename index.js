@@ -33,15 +33,15 @@ class Sprite {
         c.fillRect(this.position.x, this.position.y, this.width, this.height)
 
         // attack box
-        //if (this.isAttacking) {
-        c.fillStyle = 'green'
-        c.fillRect(
-            this.attackBox.position.x,
-            this.attackBox.position.y,
-            this.attackBox.width,
-            this.attackBox.height
-        )
-        //}
+        if (this.isAttacking) {
+            c.fillStyle = 'green'
+            c.fillRect(
+                this.attackBox.position.x,
+                this.attackBox.position.y,
+                this.attackBox.width,
+                this.attackBox.height
+            )
+        }
     }
 
     update() {
@@ -136,7 +136,7 @@ function animate() {
     enemy.update()
     player.update()
 
-    const speed = 10
+    const speed = 5
 
     // player movement
     player.velocity.x = 0
@@ -160,12 +160,12 @@ function animate() {
     }
 
     // detect for collision
-    if (rectangularCollision({rect1: player, rect2: enemy})) {
+    if (rectangularCollision({ rect1: player, rect2: enemy })) {
         console.log("ENEMY GOT HIT")
         player.isAttacking = false
     }
 
-    if (rectangularCollision({rect1: enemy, rect2: player})) {
+    if (rectangularCollision({ rect1: enemy, rect2: player })) {
         console.log("PLAYER GOT HIT")
         enemy.isAttacking = false
     }

@@ -1,3 +1,5 @@
+
+
 const canvas = document.querySelector('canvas')
 const c = canvas.getContext('2d')
 
@@ -6,68 +8,9 @@ canvas.height = 576
 
 c.fillRect(0, 0, canvas.width, canvas.height)
 
-const gravity = 0.7
+const gravity = 1
 
-class Sprite {
-    constructor({ position, velocity, color = 'red', offset }) {
-        this.position = position
-        this.velocity = velocity
-        this.height = 150
-        this.width = 50
-        this.lastKey
-        this.attackBox = {
-            position: {
-                x: this.position.x,
-                y: this.position.y
-            },
-            offset,
-            width: 100,
-            height: 50,
-        }
-        this.color = color
-        this.isAttacking = false
-    }
-
-    draw() {
-        c.fillStyle = this.color
-        c.fillRect(this.position.x, this.position.y, this.width, this.height)
-
-        // attack box
-        if (this.isAttacking) {
-            c.fillStyle = 'green'
-            c.fillRect(
-                this.attackBox.position.x,
-                this.attackBox.position.y,
-                this.attackBox.width,
-                this.attackBox.height
-            )
-        }
-    }
-
-    update() {
-        this.draw()
-        this.attackBox.position.x = this.position.x + this.attackBox.offset.x
-        this.attackBox.position.y = this.position.y
-        this.position.x += this.velocity.x
-        this.position.y += this.velocity.y
-
-        if (this.position.y + this.height + this.velocity.y >= canvas.height) {
-            this.velocity.y = 0
-        }
-        else {
-            this.velocity.y += gravity
-        }
-    }
-
-    attack() {
-        this.isAttacking = true
-        setTimeout(() => {
-            this.isAttacking = false
-        }, 100)
-    }
-}
-
-const player = new Sprite({
+const player = new Fighter({
     position: {
         x: 0,
         y: 0
@@ -82,7 +25,7 @@ const player = new Sprite({
     }
 })
 
-const enemy = new Sprite({
+const enemy = new Fighter({
     position: {
         x: 500,
         y: 0
@@ -129,14 +72,47 @@ function rectangularCollision({ rect1, rect2 }) {
     )
 }
 
+function determineWinner({player, enemy, timerId}) {
+    clearTimeout(timerId)
+    let displayText = null
+    if (player.health === enemy.health) {
+        displayText = 'Tie'
+    }
+    else if (player.health > enemy.health) {
+        displayText = 'Player 1 Wins' 
+    }
+    else if (player.health < enemy.health) {
+        displayText = 'Player 2 Wins'
+    }
+    document.querySelector('#displayText').innerHTML = displayText
+    document.querySelector('#displayText').style.display = 'flex'
+}
+
+let timer = 60
+let timerId
+function decreaseTimer() {
+    timerId = setTimeout(decreaseTimer, 1000)
+    if (timer > 0) {
+        timer -= 1
+        document.querySelector('#timer').innerHTML = timer
+    }
+
+    if (timer === 0) {
+        determineWinner({player, enemy, timerId})
+    }
+}
+
+decreaseTimer()
+
 function animate() {
     window.requestAnimationFrame(animate)
     c.fillStyle = 'black'
     c.fillRect(0, 0, canvas.width, canvas.height)
-    enemy.update()
     player.update()
+    enemy.update()
 
-    const speed = 5
+    const speed = 10
+    const demage = 20
 
     // player movement
     player.velocity.x = 0
@@ -161,19 +137,22 @@ function animate() {
 
     // detect for collision
     if (rectangularCollision({ rect1: player, rect2: enemy })) {
-        console.log("ENEMY GOT HIT")
+        console.log('ENEMY GOT HIT')
+        enemy.health -= demage
+        document.querySelector('#enemyHealth').style.width = enemy.health + '%'
         player.isAttacking = false
     }
 
     if (rectangularCollision({ rect1: enemy, rect2: player })) {
-        console.log("PLAYER GOT HIT")
+        console.log('PLAYER GOT HIT')
+        player.health -= demage
+        document.querySelector('#playerHealth').style.width = player.health + '%'
         enemy.isAttacking = false
     }
 
-    if (enemy.attackBox.position.x + enemy.attackBox.width >= player.position.x &&
-        enemy.attackBox.position.x <= player.position.x + player.width
-    ) {
-        //console.log("PLAYER GOT HIT")
+    // end the game based on health
+    if (enemy.health <= 0 || player.attack <= 0) {
+        determineWinner({player, enemy, timerId})
     }
 }
 
